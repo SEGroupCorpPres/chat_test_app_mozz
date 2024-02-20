@@ -1,4 +1,5 @@
 import 'package:chat_app_mozz_test/models/room.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// id : "user1"
 /// username : "john_doe"
@@ -14,6 +15,7 @@ class User {
     this.id,
     this.username,
     this.phoneNumber,
+    this.image,
     this.registrationDate,
     this.lastActivity,
     this.status,
@@ -25,6 +27,7 @@ class User {
     id = json['id'];
     username = json['username'];
     phoneNumber = json['phone_number'];
+    image = json['image'];
     registrationDate = json['registration_date'];
     lastActivity = json['last_activity'];
     status = json['status'];
@@ -42,6 +45,7 @@ class User {
       id: json['id'],
       username: json['username'],
       phoneNumber: json['phone_number'],
+      image: json['image'],
       registrationDate: json['registration_date'],
       lastActivity: json['last_activity'],
       status: json['status'],
@@ -53,10 +57,11 @@ class User {
   String? id;
   String? username;
   String? phoneNumber;
-  String? registrationDate;
-  String? lastActivity;
+  String? image;
+  Timestamp? registrationDate;
+  Timestamp? lastActivity;
   String? status;
-  String? lastSmsTime;
+  Timestamp? lastSmsTime;
   List<ChatRooms>? chatRooms;
 
   Map<String, dynamic> toJson() {
@@ -64,6 +69,8 @@ class User {
     map['id'] = id;
     map['username'] = username;
     map['phone_number'] = phoneNumber;
+    map['image'] = image;
+
     map['registration_date'] = registrationDate;
     map['last_activity'] = lastActivity;
     map['status'] = status;
@@ -79,6 +86,7 @@ class User {
       'id': id,
       'username': username,
       'phone_number': phoneNumber,
+      'image': image,
       'registration_date': registrationDate,
       'last_activity': lastActivity,
       'status': status,
