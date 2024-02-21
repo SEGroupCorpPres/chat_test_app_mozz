@@ -40,17 +40,18 @@ class User {
     }
   }
 
-  factory User.fromMap(Map<String, dynamic> json) {
+  factory User.fromMap(Map<String, dynamic> map) {
+    var temp;
     return User(
-      id: json['id'],
-      username: json['username'],
-      phoneNumber: json['phone_number'],
-      image: json['image'],
-      registrationDate: json['registration_date'],
-      lastActivity: json['last_activity'],
-      status: json['status'],
-      lastSmsTime: json['last_sms_time'],
-      chatRooms: json['chat_rooms'],
+      id: map['id'],
+      username: map['username'],
+      phoneNumber: map['phone_number'],
+      image: map['image'],
+      registrationDate: map['registration_date'],
+      lastActivity: map['last_activity'],
+      status: map['status'],
+      lastSmsTime: map['last_sms_time'],
+      chatRooms: null == (temp = map['chatRooms']) ? [] : (temp is List ? temp.map((map) => ChatRooms.fromJson(map)).toList() : []),
     );
   }
 
