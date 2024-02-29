@@ -28,7 +28,13 @@ class AuthRepository {
         idToken: googleAuth.idToken,
       );
 
-      final UserCredential userCredential = await _firebaseAuth.signInWithCredential(credential);
+      final UserCredential userCredential = await _firebaseAuth.signInWithCredential(credential).then(
+        (value) async {
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString('uid', value.user!.uid);
+          return value;
+        },
+      );
       log('\nUser: ${userCredential.user}');
       log('\nUser: ${userCredential.additionalUserInfo}');
 
@@ -71,8 +77,11 @@ class AuthRepository {
   void saveUserToFirestore(users.User user) async {
     // Obtain shared preferences.
     final SharedPreferences prefs = await SharedPreferences.getInstance();
+
     try {
-      await FirebaseFirestore.instance.collection('users').doc(user.id).set(user.toMap()).onError((e, _) => print("Error writing document: $e"));
+      await FirebaseFirestore.instance.collection('users').doc(user.id).set(user.toMap()).onError(
+            (e, _) => print("Error writing document: $e"),
+          );
       await prefs.setString('uid', user.id!);
       print('User saved to Firestore successfully!');
     } catch (e) {

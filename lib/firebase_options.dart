@@ -26,15 +26,9 @@ class DefaultFirebaseOptions {
       case TargetPlatform.android:
         return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return macos;
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -54,9 +48,31 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCV3vO4LnTLlzxWccp950ScoPCHtemkuD0',
-    appId: '1:336043917113:android:5cd0052582bdcf28e132e8',
+    appId: '1:336043917113:android:4530a2e1e319cdf2e132e8',
     messagingSenderId: '336043917113',
     projectId: 'chat-app-mozz-test',
     storageBucket: 'chat-app-mozz-test.appspot.com',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyCND7NKnFZoJkW_H9p0eKseXJIvmRRre8s',
+    appId: '1:336043917113:ios:d4795757a59f8eade132e8',
+    messagingSenderId: '336043917113',
+    projectId: 'chat-app-mozz-test',
+    storageBucket: 'chat-app-mozz-test.appspot.com',
+    androidClientId: '336043917113-0crhm8cckvo10ci2eic708p7fi25hvf4.apps.googleusercontent.com',
+    iosClientId: '336043917113-p5fo32mq1ghkq454su27199foq7qjbi4.apps.googleusercontent.com',
+    iosBundleId: 'com.example.chatAppMozzTest',
+  );
+
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyCND7NKnFZoJkW_H9p0eKseXJIvmRRre8s',
+    appId: '1:336043917113:ios:ee10d055cc2d3f6fe132e8',
+    messagingSenderId: '336043917113',
+    projectId: 'chat-app-mozz-test',
+    storageBucket: 'chat-app-mozz-test.appspot.com',
+    androidClientId: '336043917113-0crhm8cckvo10ci2eic708p7fi25hvf4.apps.googleusercontent.com',
+    iosClientId: '336043917113-ofn0149d4ovqv6f4t4aqp85gpnp0ru4u.apps.googleusercontent.com',
+    iosBundleId: 'com.example.chatAppMozzTest.RunnerTests',
   );
 }

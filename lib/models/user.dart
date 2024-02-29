@@ -19,7 +19,7 @@ class User {
     this.registrationDate,
     this.lastActivity,
     this.status,
-    this.lastSmsTime,
+    this.lastMessageTime,
     this.chatRooms,
   });
 
@@ -31,7 +31,7 @@ class User {
     registrationDate = json['registration_date'];
     lastActivity = json['last_activity'];
     status = json['status'];
-    lastSmsTime = json['last_sms_time'];
+    lastMessageTime = json['last_message_time'];
     if (json['chat_rooms'] != null) {
       chatRooms = [];
       json['chat_rooms'].forEach((v) {
@@ -50,7 +50,7 @@ class User {
       registrationDate: map['registration_date'],
       lastActivity: map['last_activity'],
       status: map['status'],
-      lastSmsTime: map['last_sms_time'],
+      lastMessageTime: map['last_message_time'],
       chatRooms: null == (temp = map['chatRooms']) ? [] : (temp is List ? temp.map((map) => ChatRooms.fromJson(map)).toList() : []),
     );
   }
@@ -62,7 +62,7 @@ class User {
   Timestamp? registrationDate;
   Timestamp? lastActivity;
   String? status;
-  Timestamp? lastSmsTime;
+  Timestamp? lastMessageTime;
   List<ChatRooms>? chatRooms;
 
   Map<String, dynamic> toJson() {
@@ -75,7 +75,7 @@ class User {
     map['registration_date'] = registrationDate;
     map['last_activity'] = lastActivity;
     map['status'] = status;
-    map['last_sms_time'] = lastSmsTime;
+    map['last_message_time'] = lastMessageTime;
     if (chatRooms != null) {
       map['chat_rooms'] = chatRooms?.map((v) => v.toJson()).toList();
     }
@@ -91,7 +91,7 @@ class User {
       'registration_date': registrationDate,
       'last_activity': lastActivity,
       'status': status,
-      'last_sms_time': lastSmsTime,
+      'last_message_time': lastMessageTime,
       'chat_rooms': chatRooms,
     };
   }
