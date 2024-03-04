@@ -56,6 +56,7 @@ class _MyAppState extends State<MyApp> {
     return ScreenUtilInit(
       builder: (context, child) {
         return MaterialApp(
+          
           debugShowCheckedModeBanner: false,
           title: 'Flutter Demo',
           theme: ThemeData(

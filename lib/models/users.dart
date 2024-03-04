@@ -11,12 +11,12 @@ class Users {
     if (json['users'] != null) {
       users = [];
       json['user'].forEach((v) {
-        users?.add(User.fromJson(v));
+        users?.add(UserModel.fromJson(v));
       });
     }
   }
 
-  List<User>? users;
+  List<UserModel>? users;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};

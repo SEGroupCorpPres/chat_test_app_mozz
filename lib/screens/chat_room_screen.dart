@@ -1,9 +1,12 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:chat_app_mozz_test/core/features.dart';
+import 'package:chat_app_mozz_test/models/message.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:chat_app_mozz_test/repositories/message_repo.dart';
+import 'package:chat_app_mozz_test/repositories/user_repo.dart';
+import 'package:chat_app_mozz_test/widgets/message.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../core/constants.dart';
 
@@ -24,25 +27,34 @@ class ChatRoomScreen extends StatefulWidget {
 }
 
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
+  TextEditingController _messageController = TextEditingController();
+  ScrollController _scrollController = ScrollController();
   Features features = Features();
   Constants constants = Constants();
+  bool _isTextEmpty = true;
+  List<Messages> _listMessages = [];
+  FocusNode _messageFieldFocus = FocusNode();
+
+  void _showBottomImagePicker() {
+    // showModalBottomSheet()
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    _messageController.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return StreamBuilder(
-      stream: FirebaseFirestore.instance.collection('users').snapshots(),
+      stream: UsersRepository.getSingleUserWithId(widget.uid),
       builder: (context, snapshot) {
-        User user = User();
+        UserModel user = UserModel();
         if (snapshot.hasData) {
-          for (var document in snapshot.data!.docs) {
-            Map<String, dynamic> userData = document.data();
-            if (document.exists) {
-              // User document exists
-              // Create a User object from the user data
-              user = User.fromMap(userData);
-            }
-          }
+          user = UserModel.fromJson(snapshot.data);
 
           print(user.username);
           print(user.status);
@@ -55,6 +67,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
           print(user.registrationDate);
 
           return Scaffold(
+            backgroundColor: Colors.white,
             appBar: AppBar(
               automaticallyImplyLeading: false,
               leading: IconButton(
@@ -70,19 +83,22 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 mainAxisAlignment: MainAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  CircleAvatar(
-                    radius: 25,
-                    backgroundColor: constants.leadingColor(widget.colorIndex),
-                    child: user.image != null
-                        ? CachedNetworkImage(imageUrl: user.image!)
-                        : Text(
+                  user.image != null
+                      ? CircleAvatar(
+                          radius: 20.r,
+                          backgroundImage: NetworkImage(user.image!),
+                        )
+                      : CircleAvatar(
+                          radius: 20.r,
+                          backgroundColor: constants.leadingColor(widget.colorIndex),
+                          child: Text(
                             features.leading(user.username.toString()),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontWeight: FontWeight.w700,
-                              fontSize: 20,
+                              fontSize: 18.sp,
                             ),
                           ),
-                  ),
+                        ),
                   const SizedBox(width: 10),
                   Column(
                     mainAxisAlignment: MainAxisAlignment.start,
@@ -96,8 +112,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         ),
                       ),
                       Text(
-                        user.status!,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.green),
+                        user.status! ? 'online' : 'offline',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.green),
                       ),
                     ],
                   ),
@@ -105,40 +121,128 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               ),
               shadowColor: Colors.grey,
             ),
-            body: Column(),
-            floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
-            floatingActionButton: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.grey, width: .3))),
+            body: GestureDetector(
+              onTap: () {
+                _messageFieldFocus.unfocus();
+              },
+              child: StreamBuilder(
+                stream: MessageRepository.getAllMessages(user),
+                builder: (context, snapshot) {
+                  List<UserModel> userList = [];
+                  switch (snapshot.connectionState) {
+                    case ConnectionState.waiting:
+                      return const Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      );
+                    case ConnectionState.none:
+                      return const Center(
+                        child: CircularProgressIndicator.adaptive(),
+                      );
+                    case ConnectionState.active:
+                    case ConnectionState.done:
+                      final data = snapshot.data?.docs;
+                      _listMessages = data?.map((message) => Messages.fromJson(message.data())).toList() ?? [];
+                      _listMessages.sort((a, b) => a.timestamp.millisecondsSinceEpoch.compareTo(b.timestamp.millisecondsSinceEpoch));
+                      return ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                        shrinkWrap: true,
+                        itemCount: _listMessages.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          bool isSameDate = false;
+                          String? newDate = '';
+
+                          final DateTime date = Features.returnDateAndTimeFormat(_listMessages[index].timestamp.microsecondsSinceEpoch.toString());
+
+                          if (index == 0 && _listMessages.length == 1) {
+                            newDate = Features.groupMessageDateAndTime(_listMessages[index].timestamp.microsecondsSinceEpoch.toString()).toString();
+                          } else if (index == _listMessages.length - 1) {
+                            newDate = Features.groupMessageDateAndTime(_listMessages[index].timestamp.microsecondsSinceEpoch.toString()).toString();
+                          } else {
+                            final DateTime date = Features.returnDateAndTimeFormat(_listMessages[index].timestamp.microsecondsSinceEpoch.toString());
+                            final DateTime prevDate = Features.returnDateAndTimeFormat(_listMessages[index + 1].timestamp.microsecondsSinceEpoch.toString());
+                            isSameDate = date.isAtSameMomentAs(prevDate);
+
+                            print("$date $prevDate $isSameDate");
+                            newDate = isSameDate ? '' : Features.groupMessageDateAndTime(_listMessages[index - 1].timestamp.microsecondsSinceEpoch.toString()).toString();
+                          }
+                          return Column(
+                            children: [
+                              if (newDate.isNotEmpty)
+                                Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Container(
+                                      width: size.width,
+                                      height: .1.h,
+                                      color: Colors.grey,
+                                    ),
+                                    Container(
+                                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
+                                      child: Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                        child: Text(newDate),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              MessageScreen(
+                                messages: _listMessages[index],
+                              ),
+                              SizedBox(
+                                height: 10.h,
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    default:
+                      return Container();
+                  }
+                },
+              ),
+            ),
+            bottomSheet: Container(
+              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 40, top: 10),
+              decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.grey, width: .3)), color: Colors.white),
               width: size.width,
-              height: 60,
+              height: 100,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                mainAxisSize: MainAxisSize.max,
-                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  _isTextEmpty
+                      ? Container(
+                          padding: EdgeInsets.zero,
+                          width: 45,
+                          height: 45,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(10),
+                            color: const Color(0xFFEDF2F6),
+                          ),
+                          child: IconButton(
+                            onPressed: () {},
+                            icon: const Icon(Icons.attach_file),
+                          ),
+                        )
+                      : Container(),
                   Container(
-                    padding: EdgeInsets.zero,
-                    width: 45,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(10),
-                      color: const Color(0xFFEDF2F6),
-                    ),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.attach_file),
-                    ),
-                  ),
-                  Container(
-                    width: 220,
+                    width: _isTextEmpty ? 220 : size.width - 100,
                     height: 45,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
                       color: const Color(0xFFEDF2F6),
                     ),
-                    child: const TextField(
-                      decoration: InputDecoration(
+                    child: TextField(
+                      focusNode: _messageFieldFocus,
+                      maxLines: 10,
+                      controller: _messageController,
+                      onChanged: (text) {
+                        setState(() {
+                          _isTextEmpty = text.isEmpty;
+                          print(text);
+                        });
+                      },
+                      decoration: const InputDecoration(
                         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         border: InputBorder.none,
                         isDense: true,
@@ -158,10 +262,24 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       color: const Color(0xFFEDF2F6),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: IconButton(
-                      onPressed: () {},
-                      icon: Icon(CupertinoIcons.mic),
-                    ),
+                    child: _isTextEmpty
+                        ? IconButton(
+                            onPressed: () {},
+                            icon: const Icon(CupertinoIcons.mic),
+                          )
+                        : IconButton(
+                            onPressed: () {
+                              print('send message');
+                              print(_messageController.text);
+                              if (_messageController.text.isNotEmpty) {
+                                MessageRepository.sendMessage(user, _messageController.text).onError(
+                                  (e, _) => print("Error writing document: $e"),
+                                );
+                                _messageController.text = '';
+                              }
+                            },
+                            icon: const Icon(Icons.send),
+                          ),
                   ),
                 ],
               ),

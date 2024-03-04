@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'comment.dart';
 
@@ -10,45 +11,65 @@ import 'comment.dart';
 
 class Messages {
   Messages({
-    this.id,
-    this.senderId,
-    this.content,
-    this.timestamp,
-    this.type,
-    this.comments,
+    // required this.id,
+    required this.senderId,
+    required this.recipientId,
+    required this.isRead,
+    required this.content,
+    required this.timestamp,
+    required this.type,
+    required this.comments,
   });
 
   Messages.fromJson(dynamic json) {
-    id = json['id'];
-    senderId = json['sender_id'];
-    content = json['content'];
+    // id = json['id'] as String;
+    senderId = json['sender_id'] as String;
+    recipientId = json['recipient_id'] as String;
+    isRead = json['is_read'] as bool;
+    content = json['content'] as String;
     timestamp = json['timestamp'];
-    type = json['type'];
+    type = json['type'] as String == Type.image.name
+        ? Type.image
+        : json['type'] as String == Type.audio.name
+            ? Type.audio
+            : Type.text;
     if (json['comments'] != null) {
       comments = [];
-      json['comments'].forEach((v) {
-        comments?.add(Comments.fromJson(v));
-      });
+      json['comments'].forEach(
+        (v) {
+          comments?.add(Comments.fromJson(v));
+        },
+      );
     }
   }
 
-  String? id;
-  String? senderId;
-  String? content;
-  String? timestamp;
-  String? type;
-  List<Comments>? comments;
+  // late final String? id;
+  late final String senderId;
+  late final String recipientId;
+  late final bool isRead;
+  late final String content;
+  late final Timestamp timestamp;
+  late final Type type;
+  late final List<Comments>? comments;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
-    map['id'] = id;
+    // map['id'] = id;
     map['sender_id'] = senderId;
+    map['recipient_id'] = recipientId;
+    map['is_read'] = isRead;
     map['content'] = content;
     map['timestamp'] = timestamp;
-    map['type'] = type;
+    map['type'] = type.name;
     if (comments != null) {
       map['comments'] = comments?.map((v) => v.toJson()).toList();
     }
     return map;
   }
+}
+
+enum Type {
+  text,
+  image,
+  audio,
 }
