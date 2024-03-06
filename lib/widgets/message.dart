@@ -1,20 +1,37 @@
 import 'package:chat_app_mozz_test/core/features.dart';
 import 'package:chat_app_mozz_test/models/message.dart';
+import 'package:chat_app_mozz_test/models/message_type.dart';
 import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-class MessageScreen extends StatefulWidget {
-  const MessageScreen({super.key, required this.messages});
+class Message extends StatefulWidget {
+  const Message({
+    super.key,
+    required this.messages,
+    required this.messageType,
+    required this.index,
+  });
 
   final Messages messages;
+  final MessageType messageType;
+  final int index;
 
   @override
-  State<MessageScreen> createState() => _MessageScreenState();
+  State<Message> createState() => _MessageState();
 }
 
-class _MessageScreenState extends State<MessageScreen> {
+class _MessageState extends State<Message> {
   Features features = Features();
+  late final MessageType type = widget.messageType;
+  late final int index = widget.index;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    print('$index $type   ${widget.messages.content}');
+  }
 
   Widget _senderMessage() => Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -22,35 +39,36 @@ class _MessageScreenState extends State<MessageScreen> {
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              Container(
-                height: 20.h,
-                width: 30.w,
-                decoration: const BoxDecoration(
-                  color: Colors.greenAccent,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                  ),
-                ),
-              ),
+              type == MessageType.first
+                  ? Container()
+                  : type == MessageType.middle
+                      ? Container()
+                      : Container(
+                          height: 20.h,
+                          width: 30.w,
+                          decoration: BoxDecoration(
+                            color: Colors.greenAccent,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(10.r),
+                            ),
+                          ),
+                        ),
               Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8).r,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(15.r),
-                        topRight: Radius.circular(15.r),
-                        bottomLeft: Radius.circular(15.r),
-                      ),
-                      color: Colors.greenAccent,
-                    ),
+                    decoration: _getSenderMessageDecoration(),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          widget.messages.content,
+                        Container(
+                          constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200),
+                          child: Text(
+                            widget.messages.content,
+                            softWrap: true,
+                          ),
                         ),
                         SizedBox(width: 10.w),
                         Text(features.messageTimeFormat(widget.messages.timestamp.toDate())),
@@ -85,16 +103,20 @@ class _MessageScreenState extends State<MessageScreen> {
           Stack(
             alignment: Alignment.bottomLeft,
             children: [
-              Container(
-                height: 20.h,
-                width: 30.w,
-                decoration: const BoxDecoration(
-                  color: Colors.greenAccent,
-                  borderRadius: BorderRadius.only(
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-              ),
+              type == MessageType.first
+                  ? Container()
+                  : type == MessageType.middle
+                      ? Container()
+                      : Container(
+                          height: 20.h,
+                          width: 30.w,
+                          decoration: BoxDecoration(
+                            color: Colors.greenAccent,
+                            borderRadius: BorderRadius.only(
+                              bottomRight: Radius.circular(10.r),
+                            ),
+                          ),
+                        ),
               Row(
                 children: [
                   Container(
@@ -109,14 +131,7 @@ class _MessageScreenState extends State<MessageScreen> {
                   ),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8).r,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(15.r),
-                        topRight: Radius.circular(15.r),
-                        bottomRight: Radius.circular(15.r),
-                      ),
-                      color: Colors.greenAccent,
-                    ),
+                    decoration: _getRecipientMessageDecoration(),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -139,5 +154,94 @@ class _MessageScreenState extends State<MessageScreen> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     return AuthRepository.user.uid == widget.messages.senderId ? _senderMessage() : _recipientMessage();
+  }
+
+  BoxDecoration _getSenderMessageDecoration() {
+    switch (type) {
+      case MessageType.first:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(8),
+            bottomLeft: Radius.circular(20),
+          ).r,
+        );
+      case MessageType.middle:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(8),
+            bottomRight: Radius.circular(8),
+            bottomLeft: Radius.circular(20),
+          ).r,
+        );
+      case MessageType.last:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(8),
+            bottomRight: Radius.circular(0),
+            bottomLeft: Radius.circular(20),
+          ).r,
+        );
+      case MessageType.separately:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(0),
+            bottomLeft: Radius.circular(20),
+          ).r,
+        );
+    }
+  }
+  BoxDecoration _getRecipientMessageDecoration() {
+    switch (type) {
+      case MessageType.first:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+            bottomLeft: Radius.circular(8),
+          ).r,
+        );
+      case MessageType.middle:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+            bottomLeft: Radius.circular(8),
+          ).r,
+        );
+      case MessageType.last:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(8),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+            bottomLeft: Radius.circular(0),
+          ).r,
+        );
+      case MessageType.separately:
+        return BoxDecoration(
+          color: Colors.greenAccent,
+          borderRadius: const BorderRadius.only(
+            topLeft: Radius.circular(20),
+            topRight: Radius.circular(20),
+            bottomRight: Radius.circular(20),
+            bottomLeft: Radius.circular(0),
+          ).r,
+        );
+    }
   }
 }

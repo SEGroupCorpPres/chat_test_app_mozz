@@ -1,3 +1,5 @@
+import 'package:chat_app_mozz_test/models/message.dart';
+import 'package:chat_app_mozz_test/models/message_type.dart';
 import 'package:intl/intl.dart';
 
 class Features {
@@ -11,6 +13,8 @@ class Features {
   bool getCompareMessageDay(DateTime dateTime) => _getCompareMessageDay(dateTime);
 
   String messageTimeFormat(DateTime dateTime) => _messageTimeFormat(dateTime);
+
+  MessageType getMessageType(List<Messages> listMessage, int currentIndex, String uid) => _getMessageType(listMessage, currentIndex, uid);
 
   String _leading(String title) {
     if (title.contains(' ')) {
@@ -80,5 +84,97 @@ class Features {
     }
 
     return difference;
+  }
+
+  MessageType _getMessageType(List<Messages> listMessage, int currentIndex, String uid) {
+    listMessage = listMessage.reversed.toList();
+    // listMessage.map((e) => print(e.content)).toList();
+    int length = listMessage.length;
+    if (currentIndex + 2 <= length - 1) {
+      if (currentIndex == 0) {
+        if (listMessage[currentIndex].recipientId == uid) {
+          if (listMessage[currentIndex + 1].recipientId != uid) {
+            return MessageType.separately;
+          }
+          return MessageType.last;
+        } else if (listMessage[currentIndex].recipientId != uid) {
+          if (listMessage[currentIndex + 1].recipientId == uid) {
+            return MessageType.separately;
+          }
+          return MessageType.last;
+        } else {
+          return MessageType.first;
+        }
+      } else if (currentIndex > 0) {
+        if (listMessage[currentIndex].recipientId == uid && listMessage[currentIndex - 1].recipientId == uid && listMessage[currentIndex + 1].recipientId == uid) {
+          if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex + 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex + 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex + 1].timestamp.toDate().year) {
+            return MessageType.first;
+          } else if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex - 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex - 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex - 1].timestamp.toDate().year) {
+            return MessageType.last;
+          }
+          return MessageType.middle;
+        } else if (listMessage[currentIndex].recipientId == uid && listMessage[currentIndex - 1].recipientId != uid) {
+          if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex + 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex + 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex + 1].timestamp.toDate().year) {
+            return MessageType.separately;
+          }
+          return MessageType.last;
+        } else if (listMessage[currentIndex - 1].recipientId == uid && listMessage[currentIndex + 1].recipientId != uid && listMessage[currentIndex].recipientId == uid) {
+          return MessageType.first;
+        } else if (listMessage[currentIndex].recipientId != uid && listMessage[currentIndex - 1].recipientId != uid && listMessage[currentIndex + 1].recipientId != uid) {
+          if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex - 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex - 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex - 1].timestamp.toDate().year) {
+            return MessageType.first;
+          } else if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex + 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex + 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex + 1].timestamp.toDate().year) {
+            return MessageType.last;
+          }
+          return MessageType.middle;
+        } else if (listMessage[currentIndex].recipientId != uid && listMessage[currentIndex - 1].recipientId != uid && listMessage[currentIndex + 1].recipientId == uid) {
+          if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex - 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex - 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex - 1].timestamp.toDate().year) {
+            return MessageType.separately;
+          }
+          return MessageType.first;
+        } else if (listMessage[currentIndex - 1].recipientId == uid && listMessage[currentIndex].recipientId != uid) {
+          if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex + 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex + 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex + 1].timestamp.toDate().year) {
+            return MessageType.separately;
+          }
+          return MessageType.last;
+        } else if (listMessage[currentIndex].recipientId != uid && listMessage[currentIndex - 1].recipientId != uid) {
+          if (listMessage[currentIndex].timestamp.toDate().day != listMessage[currentIndex - 1].timestamp.toDate().day ||
+              listMessage[currentIndex].timestamp.toDate().month != listMessage[currentIndex - 1].timestamp.toDate().month ||
+              listMessage[currentIndex].timestamp.toDate().year != listMessage[currentIndex - 1].timestamp.toDate().year) {
+            return MessageType.separately;
+          }
+          return MessageType.first;
+        }
+      }
+    } else if (currentIndex == length - 1) {
+      if (listMessage[currentIndex].recipientId == uid) {
+        if (listMessage[currentIndex - 1].recipientId != uid) {
+          return MessageType.separately;
+        }
+        return MessageType.first;
+      } else if (listMessage[currentIndex].recipientId != uid) {
+        if (listMessage[currentIndex - 1].recipientId == uid) {
+          return MessageType.separately;
+        }
+        return MessageType.first;
+      } else {
+        return MessageType.last;
+      }
+    }
+    return MessageType.separately;
   }
 }

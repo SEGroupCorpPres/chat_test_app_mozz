@@ -1,14 +1,19 @@
 import 'package:chat_app_mozz_test/core/features.dart';
 import 'package:chat_app_mozz_test/models/message.dart';
+import 'package:chat_app_mozz_test/models/message_type.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
 import 'package:chat_app_mozz_test/repositories/message_repo.dart';
 import 'package:chat_app_mozz_test/repositories/user_repo.dart';
 import 'package:chat_app_mozz_test/widgets/message.dart';
+import 'package:chat_app_mozz_test/widgets/message_group_header_date.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:grouped_list/grouped_list.dart';
 
 import '../core/constants.dart';
+
+enum UserType { sender, recipient }
 
 class ChatRoomScreen extends StatefulWidget {
   final BuildContext context;
@@ -27,6 +32,43 @@ class ChatRoomScreen extends StatefulWidget {
 }
 
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
+  @override
+  void initState() {
+    // _scrollController.addListener(onUserScrolls);
+    super.initState();
+    _messageController.addListener(() {
+      setState(() {
+        if (_messageController.text.isNotEmpty) {
+          _isTextEmpty = false;
+        } else {
+          _isTextEmpty = true;
+        }
+      });
+    });
+
+  }
+
+  bool keepFetchingData = true;
+
+  // Completer<bool>? _scrollCompleter;
+  // Future<void> onUserScrolls() async {
+  //   if (!keepFetchingData) return;
+  //   if (widget.onPageTopScrollFunction == null) return;
+  //   if (!(_scrollCompleter?.isCompleted ?? true)) return;
+  //
+  //   double
+  //   screenSize = MediaQuery.of(context).size.height,
+  //       scrollLimit = _scrollController.position.maxScrollExtent,
+  //       missingScroll = scrollLimit - screenSize,
+  //       scrollLimitActivation = scrollLimit - missingScroll * 0.05;
+  //
+  //   if (_scrollController.position.pixels < scrollLimitActivation) return;
+  //   if (!(_scrollCompleter?.isCompleted ?? true)) return;
+  //
+  //   _scrollCompleter = Completer();
+  //   keepFetchingData = await widget.onPageTopScrollFunction!();
+  //   _scrollCompleter!.complete(keepFetchingData);
+  // }
   TextEditingController _messageController = TextEditingController();
   ScrollController _scrollController = ScrollController();
   Features features = Features();
@@ -38,6 +80,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void _showBottomImagePicker() {
     // showModalBottomSheet()
   }
+
+
+
 
   @override
   void dispose() {
@@ -142,59 +187,40 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     case ConnectionState.done:
                       final data = snapshot.data?.docs;
                       _listMessages = data?.map((message) => Messages.fromJson(message.data())).toList() ?? [];
-                      _listMessages.sort((a, b) => a.timestamp.millisecondsSinceEpoch.compareTo(b.timestamp.millisecondsSinceEpoch));
-                      return ListView.builder(
+                      return Scrollbar(
                         controller: _scrollController,
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        shrinkWrap: true,
-                        itemCount: _listMessages.length,
-                        itemBuilder: (BuildContext context, int index) {
-                          bool isSameDate = false;
-                          String? newDate = '';
-
-                          final DateTime date = Features.returnDateAndTimeFormat(_listMessages[index].timestamp.microsecondsSinceEpoch.toString());
-
-                          if (index == 0 && _listMessages.length == 1) {
-                            newDate = Features.groupMessageDateAndTime(_listMessages[index].timestamp.microsecondsSinceEpoch.toString()).toString();
-                          } else if (index == _listMessages.length - 1) {
-                            newDate = Features.groupMessageDateAndTime(_listMessages[index].timestamp.microsecondsSinceEpoch.toString()).toString();
-                          } else {
-                            final DateTime date = Features.returnDateAndTimeFormat(_listMessages[index].timestamp.microsecondsSinceEpoch.toString());
-                            final DateTime prevDate = Features.returnDateAndTimeFormat(_listMessages[index + 1].timestamp.microsecondsSinceEpoch.toString());
-                            isSameDate = date.isAtSameMomentAs(prevDate);
-
-                            print("$date $prevDate $isSameDate");
-                            newDate = isSameDate ? '' : Features.groupMessageDateAndTime(_listMessages[index - 1].timestamp.microsecondsSinceEpoch.toString()).toString();
-                          }
-                          return Column(
-                            children: [
-                              if (newDate.isNotEmpty)
-                                Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Container(
-                                      width: size.width,
-                                      height: .1.h,
-                                      color: Colors.grey,
-                                    ),
-                                    Container(
-                                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20)),
-                                      child: Padding(
-                                        padding: EdgeInsets.symmetric(horizontal: 10.w),
-                                        child: Text(newDate),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              MessageScreen(
-                                messages: _listMessages[index],
+                        thumbVisibility: true,
+                        radius: const Radius.circular(15),
+                        child: SizedBox(
+                          height: size.height - 100.h - kToolbarHeight.h,
+                          child: GroupedListView<Messages, DateTime>(
+                            controller: _scrollController,
+                            elements: _listMessages,
+                            groupBy: (Messages message) => DateTime(
+                              message.timestamp.toDate().year,
+                              message.timestamp.toDate().month,
+                              message.timestamp.toDate().day,
+                            ),
+                            groupHeaderBuilder: (Messages message) => GroupHeaderDate(
+                              date: message.timestamp.toDate(),
+                            ),
+                            groupComparator: (message1, message2) => message1.compareTo(message2),
+                            sort: true,
+                            reverse: true,
+                            floatingHeader: true,
+                            useStickyGroupSeparators: true,
+                            indexedItemBuilder: (context, Messages element, int index) => Padding(
+                              padding: EdgeInsets.only(bottom: 10.h),
+                              child: Message(
+                                messages: element,
+                                messageType: features.getMessageType(_listMessages, index, widget.uid),
+                                index: index,
                               ),
-                              SizedBox(
-                                height: 10.h,
-                              ),
-                            ],
-                          );
-                        },
+                            ),
+                            itemComparator: (message1, message2) => message1.timestamp.compareTo(message2.timestamp),
+                            order: GroupedListOrder.DESC, // optional
+                          ),
+                        ),
                       );
                     default:
                       return Container();
@@ -226,8 +252,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                         )
                       : Container(),
                   Container(
+                    // constraints: BoxConstraints(maxHeight: 200),
                     width: _isTextEmpty ? 220 : size.width - 100,
-                    height: 45,
+                    // height: 45,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
                       color: const Color(0xFFEDF2F6),
@@ -235,13 +262,8 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                     child: TextField(
                       focusNode: _messageFieldFocus,
                       maxLines: 10,
+                      minLines: 1,
                       controller: _messageController,
-                      onChanged: (text) {
-                        setState(() {
-                          _isTextEmpty = text.isEmpty;
-                          print(text);
-                        });
-                      },
                       decoration: const InputDecoration(
                         contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                         border: InputBorder.none,

@@ -1,3 +1,4 @@
+
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'comment.dart';
@@ -9,7 +10,7 @@ import 'comment.dart';
 /// type : "text"
 /// comments : [{"id":"comment1","sender_id":"user2","content":"Nice to meet you!","timestamp":"2024-02-09T11:35:00"},null]
 
-class Messages {
+class Messages implements Comparable{
   Messages({
     // required this.id,
     required this.senderId,
@@ -65,6 +66,12 @@ class Messages {
       map['comments'] = comments?.map((v) => v.toJson()).toList();
     }
     return map;
+  }
+
+  @override
+  int compareTo(other) {
+    // TODO: implement compareTo
+    return timestamp.toDate().compareTo(other.timestamp.toDate());
   }
 }
 
