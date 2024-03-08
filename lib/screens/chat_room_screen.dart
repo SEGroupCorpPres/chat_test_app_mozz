@@ -6,6 +6,7 @@ import 'package:chat_app_mozz_test/repositories/message_repo.dart';
 import 'package:chat_app_mozz_test/repositories/user_repo.dart';
 import 'package:chat_app_mozz_test/widgets/message.dart';
 import 'package:chat_app_mozz_test/widgets/message_group_header_date.dart';
+import 'package:chat_app_mozz_test/widgets/message_text_field.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -35,16 +36,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   void initState() {
     // _scrollController.addListener(onUserScrolls);
-    super.initState();
-    _messageController.addListener(() {
-      setState(() {
-        if (_messageController.text.isNotEmpty) {
-          _isTextEmpty = false;
-        } else {
-          _isTextEmpty = true;
-        }
-      });
-    });
+
 
   }
 
@@ -69,13 +61,10 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   //   keepFetchingData = await widget.onPageTopScrollFunction!();
   //   _scrollCompleter!.complete(keepFetchingData);
   // }
-  TextEditingController _messageController = TextEditingController();
   ScrollController _scrollController = ScrollController();
   Features features = Features();
   Constants constants = Constants();
-  bool _isTextEmpty = true;
   List<Messages> _listMessages = [];
-  FocusNode _messageFieldFocus = FocusNode();
 
   void _showBottomImagePicker() {
     // showModalBottomSheet()
@@ -88,7 +77,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   void dispose() {
     // TODO: implement dispose
     super.dispose();
-    _messageController.dispose();
   }
 
   @override
@@ -167,9 +155,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
               shadowColor: Colors.grey,
             ),
             body: GestureDetector(
-              onTap: () {
-                _messageFieldFocus.unfocus();
-              },
               child: StreamBuilder(
                 stream: MessageRepository.getAllMessages(user),
                 builder: (context, snapshot) {
@@ -228,84 +213,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                 },
               ),
             ),
-            bottomSheet: Container(
-              padding: const EdgeInsets.only(right: 20, left: 20, bottom: 40, top: 10),
-              decoration: const BoxDecoration(border: Border(top: BorderSide(color: Colors.grey, width: .3)), color: Colors.white),
-              width: size.width,
-              height: 100,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                children: [
-                  _isTextEmpty
-                      ? Container(
-                          padding: EdgeInsets.zero,
-                          width: 45,
-                          height: 45,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            color: const Color(0xFFEDF2F6),
-                          ),
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: const Icon(Icons.attach_file),
-                          ),
-                        )
-                      : Container(),
-                  Container(
-                    // constraints: BoxConstraints(maxHeight: 200),
-                    width: _isTextEmpty ? 220 : size.width - 100,
-                    // height: 45,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(15),
-                      color: const Color(0xFFEDF2F6),
-                    ),
-                    child: TextField(
-                      focusNode: _messageFieldFocus,
-                      maxLines: 10,
-                      minLines: 1,
-                      controller: _messageController,
-                      decoration: const InputDecoration(
-                        contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        border: InputBorder.none,
-                        isDense: true,
-                        fillColor: Colors.grey,
-                        hoverColor: Colors.red,
-                        focusColor: Colors.green,
-                        hintText: 'Сообщение',
-                        hintStyle: TextStyle(color: Colors.grey),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: EdgeInsets.zero,
-                    width: 45,
-                    height: 45,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFEDF2F6),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: _isTextEmpty
-                        ? IconButton(
-                            onPressed: () {},
-                            icon: const Icon(CupertinoIcons.mic),
-                          )
-                        : IconButton(
-                            onPressed: () {
-                              print('send message');
-                              print(_messageController.text);
-                              if (_messageController.text.isNotEmpty) {
-                                MessageRepository.sendMessage(user, _messageController.text).onError(
-                                  (e, _) => print("Error writing document: $e"),
-                                );
-                                _messageController.text = '';
-                              }
-                            },
-                            icon: const Icon(Icons.send),
-                          ),
-                  ),
-                ],
-              ),
-            ),
+            bottomSheet: MessageTextField(userModel: user,),
           );
         } else if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(

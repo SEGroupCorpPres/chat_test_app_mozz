@@ -2,6 +2,7 @@ import 'package:chat_app_mozz_test/core/features.dart';
 import 'package:chat_app_mozz_test/models/message.dart';
 import 'package:chat_app_mozz_test/models/message_type.dart';
 import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
+import 'package:easy_image_viewer/easy_image_viewer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -25,6 +26,7 @@ class _MessageState extends State<Message> {
   Features features = Features();
   late final MessageType type = widget.messageType;
   late final int index = widget.index;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -59,23 +61,37 @@ class _MessageState extends State<Message> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8).r,
                     decoration: _getSenderMessageDecoration(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
+                    child: Column(
                       children: [
-                        Container(
-                          constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200),
-                          child: Text(
-                            widget.messages.content,
-                            softWrap: true,
-                          ),
-                        ),
-                        SizedBox(width: 10.w),
-                        Text(features.messageTimeFormat(widget.messages.timestamp.toDate())),
-                        SizedBox(width: 3.w),
-                        Icon(
-                          widget.messages.isRead ? Icons.done_all : Icons.check,
-                          size: 15.sp,
+                        widget.messages.type == Type.image
+                            ? Container(
+                                constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200),
+                                decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(widget.messages.content.toString()), fit: BoxFit.fitWidth)),
+                              )
+                            : Container(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          // crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200),
+                              child: Text(
+                                widget.messages.type == Type.image ? widget.messages.comments.toString() : widget.messages.content,
+                                softWrap: true,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Row(
+                              children: [
+                                Text(features.messageTimeFormat(widget.messages.timestamp.toDate())),
+                                SizedBox(width: 3.w),
+                                Icon(
+                                  widget.messages.isRead ? Icons.done_all : Icons.check,
+                                  size: 15.sp,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ],
                     ),
@@ -118,6 +134,7 @@ class _MessageState extends State<Message> {
                           ),
                         ),
               Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Container(
                     width: 10.w,
@@ -132,14 +149,52 @@ class _MessageState extends State<Message> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8).r,
                     decoration: _getRecipientMessageDecoration(),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    child: Column(
                       children: [
-                        Text(
-                          widget.messages.content,
+                        widget.messages.type == Type.image
+                            ? GestureDetector(
+                                onTap: () {
+                                  final imageProvider = Image.network(widget.messages.content).image;
+                                  showImageViewer(
+                                    context,
+                                    imageProvider,
+                                    onViewerDismissed: () {
+                                      print("dismissed");
+                                    },
+                                    swipeDismissible: true,
+                                    backgroundColor: Colors.transparent,
+                                  );
+                                },
+                                child: Container(
+                                  constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200, maxHeight: 300),
+                                  decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(widget.messages.content), fit: BoxFit.cover)),
+                                ),
+                              )
+                            : Container(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Container(
+                              constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200),
+                              child: Text(
+                                widget.messages.type == Type.image ? widget.messages.comments.toString() : widget.messages.content,
+                                softWrap: true,
+                              ),
+                            ),
+                            SizedBox(width: 10.w),
+                            Row(
+                              children: [
+                                Text(features.messageTimeFormat(widget.messages.timestamp.toDate())),
+                                SizedBox(width: 3.w),
+                                Icon(
+                                  widget.messages.isRead ? Icons.done_all : Icons.check,
+                                  size: 15.sp,
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-                        SizedBox(width: 10.w),
-                        Text(features.messageTimeFormat(widget.messages.timestamp.toDate())),
                       ],
                     ),
                   ),
@@ -200,6 +255,7 @@ class _MessageState extends State<Message> {
         );
     }
   }
+
   BoxDecoration _getRecipientMessageDecoration() {
     switch (type) {
       case MessageType.first:

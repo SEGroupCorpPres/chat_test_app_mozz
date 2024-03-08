@@ -1,4 +1,3 @@
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 import 'comment.dart';
@@ -10,7 +9,7 @@ import 'comment.dart';
 /// type : "text"
 /// comments : [{"id":"comment1","sender_id":"user2","content":"Nice to meet you!","timestamp":"2024-02-09T11:35:00"},null]
 
-class Messages implements Comparable{
+class Messages implements Comparable {
   Messages({
     // required this.id,
     required this.senderId,
@@ -31,9 +30,11 @@ class Messages implements Comparable{
     timestamp = json['timestamp'];
     type = json['type'] as String == Type.image.name
         ? Type.image
-        : json['type'] as String == Type.audio.name
-            ? Type.audio
-            : Type.text;
+        : json['type'] as String == Type.video.name
+            ? Type.video
+            : json['type'] as String == Type.audio.name
+                ? Type.audio
+                : Type.text;
     if (json['comments'] != null) {
       comments = [];
       json['comments'].forEach(
@@ -78,5 +79,6 @@ class Messages implements Comparable{
 enum Type {
   text,
   image,
+  video,
   audio,
 }
