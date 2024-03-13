@@ -45,5 +45,31 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>GIDClientID</key>
+    <!-- TODO Replace this value: -->
+    <!-- Copied from GoogleService-Info.plist key CLIENT_ID -->
+    <string>336043917113-p5fo32mq1ghkq454su27199foq7qjbi4.apps.googleusercontent.com</string>
+    <!-- Put me in the [my_project]/ios/Runner/Info.plist file -->
+    <!-- Google Sign-in Section -->
+    <key>CFBundleURLTypes</key>
+    <array>
+    	<dict>
+    		<key>CFBundleTypeRole</key>
+    		<string>Editor</string>
+    		<key>CFBundleURLSchemes</key>
+    		<array>
+    			<!-- TODO Replace this value: -->
+    			<!-- Copied from GoogleService-Info.plist key REVERSED_CLIENT_ID -->
+    			<string>com.googleusercontent.apps.336043917113-p5fo32mq1ghkq454su27199foq7qjbi4</string>
+    		</array>
+    	</dict>
+    </array>
+    <!-- End of the Google Sign-in Section -->
+    <key>NSCameraUsageDescription</key>
+    	<string>Used to demonstrate image picker plugin</string>
+    	<key>NSMicrophoneUsageDescription</key>
+    	<string>Used to capture audio for image picker plugin</string>
+    	<key>NSPhotoLibraryUsageDescription</key>
+    	<string>Used to demonstrate image picker plugin</string>
 </dict>
 </plist>

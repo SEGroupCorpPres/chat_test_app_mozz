@@ -17,10 +17,7 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      throw UnsupportedError(
-        'DefaultFirebaseOptions have not been configured for web - '
-        'you can reconfigure this by running the FlutterFire CLI again.',
-      );
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -46,6 +43,16 @@ class DefaultFirebaseOptions {
     }
   }
 
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyAa7t1gq2T9IqTwiX5zI_AOnWY6T7tGQD0',
+    appId: '1:336043917113:web:d624a7627dde356be132e8',
+    messagingSenderId: '336043917113',
+    projectId: 'chat-app-mozz-test',
+    authDomain: 'chat-app-mozz-test.firebaseapp.com',
+    storageBucket: 'chat-app-mozz-test.appspot.com',
+    measurementId: 'G-G2Y56R4RLB',
+  );
+
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCV3vO4LnTLlzxWccp950ScoPCHtemkuD0',
     appId: '1:336043917113:android:4530a2e1e319cdf2e132e8',
@@ -56,7 +63,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyCND7NKnFZoJkW_H9p0eKseXJIvmRRre8s',
-    appId: '1:336043917113:ios:d4795757a59f8eade132e8',
+    appId: '1:336043917113:ios:83bad518bc63d98ce132e8',
     messagingSenderId: '336043917113',
     projectId: 'chat-app-mozz-test',
     storageBucket: 'chat-app-mozz-test.appspot.com',
@@ -67,7 +74,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions macos = FirebaseOptions(
     apiKey: 'AIzaSyCND7NKnFZoJkW_H9p0eKseXJIvmRRre8s',
-    appId: '1:336043917113:ios:ee10d055cc2d3f6fe132e8',
+    appId: '1:336043917113:ios:b8af49c203b8bb0de132e8',
     messagingSenderId: '336043917113',
     projectId: 'chat-app-mozz-test',
     storageBucket: 'chat-app-mozz-test.appspot.com',
