@@ -1,19 +1,14 @@
+import 'package:chat_app_mozz_test/core/constants.dart';
 import 'package:chat_app_mozz_test/core/features.dart';
-import 'package:chat_app_mozz_test/models/message.dart';
-import 'package:chat_app_mozz_test/models/message_type.dart';
+import 'package:chat_app_mozz_test/models/room.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
 import 'package:chat_app_mozz_test/repositories/message_repo.dart';
+import 'package:chat_app_mozz_test/repositories/room_repo.dart';
 import 'package:chat_app_mozz_test/repositories/user_repo.dart';
-import 'package:chat_app_mozz_test/widgets/message.dart';
-import 'package:chat_app_mozz_test/widgets/message_group_header_date.dart';
+import 'package:chat_app_mozz_test/widgets/message_list_item.dart';
 import 'package:chat_app_mozz_test/widgets/message_text_field.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:grouped_list/grouped_list.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import '../core/constants.dart';
 
 enum UserType { sender, recipient }
 
@@ -36,9 +31,9 @@ class ChatRoomScreen extends StatefulWidget {
 class _ChatRoomScreenState extends State<ChatRoomScreen> {
   @override
   void initState() {
+    super.initState();
+
     // _scrollController.addListener(onUserScrolls);
-
-
   }
 
   bool keepFetchingData = true;
@@ -62,16 +57,9 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
   //   keepFetchingData = await widget.onPageTopScrollFunction!();
   //   _scrollCompleter!.complete(keepFetchingData);
   // }
-  ScrollController _scrollController = ScrollController();
+  final ScrollController _scrollController = ScrollController();
   Features features = Features();
   Constants constants = Constants();
-  List<Messages> _listMessages = [];
-
-  void _showBottomImagePicker() {
-    // showModalBottomSheet()
-  }
-
-
 
   @override
   void dispose() {
@@ -81,23 +69,14 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
+    String roomID = MessageRepository.getConversationId(widget.uid);
+
     return StreamBuilder(
       stream: UsersRepository.getSingleUserWithId(widget.uid),
       builder: (context, snapshot) {
         UserModel user = UserModel();
         if (snapshot.hasData) {
           user = UserModel.fromJson(snapshot.data);
-
-          print(user.username);
-          print(user.status);
-          print(user.id);
-          print(user.lastMessageTime);
-          print(user.chatRooms);
-          print(user.image);
-          print(user.phoneNumber);
-          print(user.lastActivity);
-          print(user.registrationDate);
 
           return Scaffold(
             backgroundColor: Colors.white,
@@ -156,64 +135,30 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
             ),
             body: GestureDetector(
               child: StreamBuilder(
-                stream: MessageRepository.getAllMessages(user),
-                builder: (context, snapshot) {
-                  List<UserModel> userList = [];
-                  switch (snapshot.connectionState) {
-                    case ConnectionState.waiting:
-                      return const Center(
-                        child: CircularProgressIndicator.adaptive(),
-                      );
-                    case ConnectionState.none:
-                      return const Center(
-                        child: CircularProgressIndicator.adaptive(),
-                      );
-                    case ConnectionState.active:
-                    case ConnectionState.done:
-                      final data = snapshot.data?.docs;
-                      _listMessages = data?.map((message) => Messages.fromJson(message.data())).toList() ?? [];
-                      return Scrollbar(
-                        controller: _scrollController,
-                        thumbVisibility: true,
-                        radius: const Radius.circular(15),
-                        child: SizedBox(
-                          height: size.height - 100.h - kToolbarHeight.h,
-                          child: GroupedListView<Messages, DateTime>(
-                            controller: _scrollController,
-                            elements: _listMessages,
-                            groupBy: (Messages message) => DateTime(
-                              message.timestamp.toDate().year,
-                              message.timestamp.toDate().month,
-                              message.timestamp.toDate().day,
-                            ),
-                            groupHeaderBuilder: (Messages message) => GroupHeaderDate(
-                              date: message.timestamp.toDate(),
-                            ),
-                            groupComparator: (message1, message2) => message1.compareTo(message2),
-                            sort: true,
-                            reverse: true,
-                            floatingHeader: true,
-                            useStickyGroupSeparators: true,
-                            indexedItemBuilder: (context, Messages element, int index) => Padding(
-                              padding: EdgeInsets.only(bottom: 10.h),
-                              child: Message(
-                                messages: element,
-                                messageType: features.getMessageType(_listMessages, index, widget.uid),
-                                index: index,
-                              ),
-                            ),
-                            itemComparator: (message1, message2) => message1.timestamp.compareTo(message2.timestamp),
-                            order: GroupedListOrder.DESC, // optional
-                          ),
-                        ),
-                      );
-                    default:
-                      return Container();
-                  }
-                },
-              ),
+                  stream: ChatRoomsRepository.getChatRoom(roomID),
+                  builder: (context, roomSnapshot) {
+                    ChatRooms chatRooms = ChatRooms(
+                      id: roomSnapshot.data?['id'],
+                      messageIDList: roomSnapshot.data?['message_id_list'] != null ? List<String>.from(roomSnapshot.data?['message_id_list']) : [],
+                    );
+                    switch (roomSnapshot.connectionState) {
+                      case ConnectionState.active:
+                      case ConnectionState.done:
+                        if (chatRooms.messageIDList!.isNotEmpty) {
+                          return MessageListItem(
+                            messageIdList: chatRooms.messageIDList,
+                            uid: widget.uid,
+                          );
+                        }
+                      default:
+                        return Container();
+                    }
+                    return Container();
+                  }),
             ),
-            bottomSheet: MessageTextField(userModel: user,),
+            bottomSheet: MessageTextField(
+              userModel: user,
+            ),
           );
         } else if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(

@@ -10,20 +10,13 @@ import 'package:shared_preferences/shared_preferences.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
-  // SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
   SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(
-      statusBarIconBrightness: Brightness.dark,
-      statusBarBrightness: Brightness.dark,
-      statusBarColor: Colors.white
-    ),
+    const SystemUiOverlayStyle(statusBarIconBrightness: Brightness.dark, statusBarBrightness: Brightness.dark, statusBarColor: Colors.white),
   );
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]).then((value) {
-    print('${sharedPreferences.get('uid')}  user id');
     runApp(const MyApp());
   });
 }
@@ -56,16 +49,13 @@ class _MyAppState extends State<MyApp> {
     return ScreenUtilInit(
       builder: (context, child) {
         return MaterialApp(
-          
           debugShowCheckedModeBanner: false,
           title: 'Flutter Demo',
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
             useMaterial3: true,
           ),
-          // home: const ChatListScreen(title: 'Flutter Demo Home Page'),
           home: child,
-          // home: ChatRoomScreen(context: context, index:0, colorIndex: 2,),
         );
       },
       child: FutureBuilder(

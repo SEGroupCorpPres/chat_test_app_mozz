@@ -11,21 +11,24 @@ class GroupHeaderDate extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
-      child: Stack(alignment: Alignment.center, children: [
-        Container(
-          width: MediaQuery.sizeOf(context).width,
-          color: Colors.grey,
-          height: .5.h,
-        ),
-        Container(
-          color: Colors.white,
-          padding: EdgeInsets.symmetric(horizontal: 10.w),
-          child: Text(
-            Features().getLastMessageTime(date),
-            textAlign: TextAlign.center,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: MediaQuery.sizeOf(context).width,
+            color: Colors.grey,
+            height: .5.h,
           ),
-        ),
-      ]),
+          Container(
+            color: Colors.white,
+            padding: EdgeInsets.symmetric(horizontal: 10.w),
+            child: Text(
+              Features().getLastMessageTime(date),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

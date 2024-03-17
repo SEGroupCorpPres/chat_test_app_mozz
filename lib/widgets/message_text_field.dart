@@ -5,6 +5,7 @@ import 'package:chat_app_mozz_test/models/message.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
 import 'package:chat_app_mozz_test/repositories/message_repo.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -21,10 +22,10 @@ class MessageTextField extends StatefulWidget {
 }
 
 class _MessageTextFieldState extends State<MessageTextField> {
-  TextEditingController _messageController = TextEditingController();
+  final TextEditingController _messageController = TextEditingController();
   bool _isTextEmpty = true;
   final ImageHelper imageHelper = ImageHelper();
-  FocusNode _messageFieldFocus = FocusNode();
+  final FocusNode _messageFieldFocus = FocusNode();
 
   File? _image;
   List<File> _images = [];
@@ -54,7 +55,6 @@ class _MessageTextFieldState extends State<MessageTextField> {
                 }
               } else {
                 setState(() => _images = files.map((e) => File(e.path)).toList());
-                print(_images.map((e) => print(e.path)).toList());
               }
             }
           },
@@ -119,7 +119,6 @@ class _MessageTextFieldState extends State<MessageTextField> {
                     await MessageRepository.sendChatImage(widget.userModel, _image!);
                   } else {
                     setState(() => _images = files.map((e) => File(e.path)).toList());
-                    print(_images.toList());
                     _images.map((e) async => await MessageRepository.sendChatImage(widget.userModel, e));
                   }
                 }
@@ -177,7 +176,6 @@ class _MessageTextFieldState extends State<MessageTextField> {
               : Container(),
           Container(
             width: _isTextEmpty ? 220 : size.width - 100,
-            // height: 45,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(15),
               color: const Color(0xFFEDF2F6),
@@ -229,11 +227,13 @@ class _MessageTextFieldState extends State<MessageTextField> {
                   )
                 : IconButton(
                     onPressed: () {
-                      print('send message');
-                      print(_messageController.text);
                       if (_messageController.text.isNotEmpty) {
                         MessageRepository.sendMessage(widget.userModel, _messageController.text, Type.text).onError(
-                          (e, _) => print("Error writing document: $e"),
+                          (e, _) {
+                            if (kDebugMode) {
+                              print("Error writing document: $e");
+                            }
+                          },
                         );
                         _messageController.text = '';
                       }

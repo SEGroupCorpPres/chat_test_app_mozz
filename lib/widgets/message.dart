@@ -31,8 +31,6 @@ class _MessageState extends State<Message> {
   void initState() {
     // TODO: implement initState
     super.initState();
-
-    print('$index $type   ${widget.messages.content}');
   }
 
   Widget _senderMessage() => Row(
@@ -66,7 +64,12 @@ class _MessageState extends State<Message> {
                         widget.messages.type == Type.image
                             ? Container(
                                 constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200),
-                                decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(widget.messages.content.toString()), fit: BoxFit.fitWidth)),
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: NetworkImage(widget.messages.content.toString()),
+                                    fit: BoxFit.fitWidth,
+                                  ),
+                                ),
                               )
                             : Container(),
                         Row(
@@ -167,7 +170,12 @@ class _MessageState extends State<Message> {
                                 },
                                 child: Container(
                                   constraints: BoxConstraints(maxWidth: MediaQuery.sizeOf(context).width - 200, maxHeight: 300),
-                                  decoration: BoxDecoration(image: DecorationImage(image: NetworkImage(widget.messages.content), fit: BoxFit.cover)),
+                                  decoration: BoxDecoration(
+                                    image: DecorationImage(
+                                      image: NetworkImage(widget.messages.content),
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
                                 ),
                               )
                             : Container(),
@@ -207,7 +215,6 @@ class _MessageState extends State<Message> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.sizeOf(context);
     return AuthRepository.user.uid == widget.messages.senderId ? _senderMessage() : _recipientMessage();
   }
 

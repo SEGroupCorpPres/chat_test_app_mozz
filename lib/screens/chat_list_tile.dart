@@ -32,7 +32,6 @@ class _ChatListTileState extends State<ChatListTile> {
 
   Widget buildLastMessage(Messages message) {
     if (message.type == Type.text) {
-      print(message.recipientId == widget.user.id);
       return Text(message.content);
     } else if (message.type == Type.image) {
       return Container(
@@ -50,9 +49,17 @@ class _ChatListTileState extends State<ChatListTile> {
       return Container();
     } else {
       if (isRead) {
-        return Icon(Icons.done_all, size: 13, color: CupertinoColors.activeGreen,);
+        return const Icon(
+          Icons.done_all,
+          size: 13,
+          color: CupertinoColors.activeGreen,
+        );
       } else {
-        return Icon(Icons.check, size: 13, color: Colors.grey,);
+        return const Icon(
+          Icons.check,
+          size: 13,
+          color: Colors.grey,
+        );
       }
     }
   }
@@ -99,22 +106,19 @@ class _ChatListTileState extends State<ChatListTile> {
           ? StreamBuilder(
               stream: MessageRepository.getMessage(widget.lastMessageId!),
               builder: (context, snapshot) {
-                print(snapshot.data);
                 switch (snapshot.connectionState) {
                   case ConnectionState.active:
                   case ConnectionState.done:
-                    print(snapshot.connectionState);
                     Messages lastMessage = Messages.fromJson(snapshot.data);
                     return Row(
                       children: [
                         Text(lastMessage.recipientId != widget.user.id ? '' : 'Вы: '),
                         buildLastMessage(lastMessage),
-                        SizedBox(width: 10),
+                        const SizedBox(width: 10),
                         buildMessageReadStatus(lastMessage.recipientId, lastMessage.isRead),
                       ],
                     );
                   default:
-                    print(snapshot.connectionState);
                     return Container();
                 }
               },
@@ -129,7 +133,6 @@ class _ChatListTileState extends State<ChatListTile> {
                   switch (snapshot.connectionState) {
                     case ConnectionState.active:
                     case ConnectionState.done:
-                      print(snapshot.connectionState);
                       Messages lastMessage = Messages.fromJson(snapshot.data);
                       return Column(
                         children: [

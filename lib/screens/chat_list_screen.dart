@@ -1,6 +1,5 @@
 import 'dart:math';
 
-import 'package:chat_app_mozz_test/core/features.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
 import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
 import 'package:chat_app_mozz_test/repositories/message_repo.dart';
@@ -8,11 +7,7 @@ import 'package:chat_app_mozz_test/repositories/user_repo.dart';
 import 'package:chat_app_mozz_test/screens/chat_list_tile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-import '../core/constants.dart';
-import 'chat_room_screen.dart';
 
 class ChatListScreen extends StatefulWidget {
   const ChatListScreen({super.key});
@@ -23,12 +18,8 @@ class ChatListScreen extends StatefulWidget {
 
 class _ChatListScreenState extends State<ChatListScreen> {
   final AuthRepository authRepository = AuthRepository();
-  UsersRepository usersRepository = UsersRepository();
 
-  DateTime _date = DateTime.now();
-  TimeOfDay _time = TimeOfDay.now();
-  Features features = Features();
-  Constants constants = Constants();
+  //
   final List<UserModel> _searchList = [];
   List<UserModel> _list = [];
   bool _isSearching = false;
@@ -46,7 +37,6 @@ class _ChatListScreenState extends State<ChatListScreen> {
   Future<void> getUID() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     uid = sharedPreferences.getString('uid')!;
-    print('$uid  init uid');
   }
 
   @override
@@ -131,21 +121,26 @@ class _ChatListScreenState extends State<ChatListScreen> {
                     _list = data?.map((e) => UserModel.fromJson(e.data())).toList() ?? [];
                     userList = _isSearching ? _searchList : _list;
                     userList.sort((a, b) => b.lastMessageTime!.millisecondsSinceEpoch.compareTo(a.lastMessageTime!.millisecondsSinceEpoch));
-                    return Column(
-                      children: [
-                        ListView.separated(
-                          padding: EdgeInsets.zero,
-                          shrinkWrap: true,
-                          itemCount: _isSearching ? _searchList.length : userList.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            random = Random().nextInt(16);
-                            final String roomId = MessageRepository.getConversationId(userList[index].id!);
-                            print('$roomId  ------> room id');
-                            return StreamBuilder(
+                    return ListView.separated(
+                      padding: EdgeInsets.zero,
+                      shrinkWrap: true,
+                      itemCount: _isSearching ? _searchList.length : userList.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        random = Random().nextInt(16);
+                        final String roomId = MessageRepository.getConversationId(userList[index].id!);
+                        return Column(
+                          children: [
+                            index == 0
+                                ? Divider(
+                                    indent: 20,
+                                    endIndent: 20,
+                                    thickness: 1,
+                                    color: Colors.grey.shade200,
+                                  )
+                                : Container(),
+                            StreamBuilder(
                               stream: MessageRepository.getLastMessageId(roomId),
                               builder: (context, messageIDSnapshot) {
-                                print(messageIDSnapshot.connectionState);
-                                print(messageIDSnapshot.data.toString() + '  messageSnapshot');
                                 switch (messageIDSnapshot.connectionState) {
                                   case ConnectionState.active:
                                   case ConnectionState.done:
@@ -155,22 +150,24 @@ class _ChatListScreenState extends State<ChatListScreen> {
                                     return ChatListTile(user: userList[index], colorIndex: random!, lastMessageId: messageIDSnapshot.data);
                                 }
                               },
-                            );
-                          },
-                          separatorBuilder: (BuildContext context, int index) => Divider(
-                            indent: 20,
-                            endIndent: 20,
-                            thickness: 1,
-                            color: Colors.grey.shade200,
-                          ),
-                        ),
-                        Divider(
-                          indent: 20,
-                          endIndent: 20,
-                          thickness: 1,
-                          color: Colors.grey.shade200,
-                        ),
-                      ],
+                            ),
+                            index == userList.length - 1
+                                ? Divider(
+                                    indent: 20,
+                                    endIndent: 20,
+                                    thickness: 1,
+                                    color: Colors.grey.shade200,
+                                  )
+                                : Container(),
+                          ],
+                        );
+                      },
+                      separatorBuilder: (BuildContext context, int index) => Divider(
+                        indent: 20,
+                        endIndent: 20,
+                        thickness: 1,
+                        color: Colors.grey.shade200,
+                      ),
                     );
                   default:
                     return Container();

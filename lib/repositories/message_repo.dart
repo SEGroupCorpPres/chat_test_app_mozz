@@ -5,33 +5,49 @@ import 'dart:io';
 import 'package:chat_app_mozz_test/models/message.dart';
 import 'package:chat_app_mozz_test/models/room.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
-import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
 import 'package:chat_app_mozz_test/repositories/room_repo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 
 class MessageRepository {
+  // Firebase authentication , cloud firestore and storage instances
   static final FirebaseAuth _firebaseAuth = FirebaseAuth.instance;
   static final FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
-
-  AuthRepository _authRepository = AuthRepository();
-
-  ChatRoomsRepository _roomsRepository = ChatRoomsRepository();
-
-  static User get user => _firebaseAuth.currentUser!;
-  static late UserModel currentUser;
-  static late ChatRooms rooms;
-  static late Messages messages;
-  static late String lastMessageID;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  // Get current user
+  static User get user => _firebaseAuth.currentUser!;
+
+  // Get conversation ID based on user IDs
   static String getConversationId(String id) => user.uid.hashCode <= id.hashCode ? '${user.uid}_$id' : '${id}_${user.uid}';
 
-  static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(UserModel userModel) {
-    return _firestore.collection('messages').snapshots();
+  // Stream of all messages given a list of message IDs
+  static Stream<List<DocumentSnapshot<Map<String, dynamic>>>>? getAllMessages(List<String> messageIdList) {
+    try {
+      return _firestore.collection('messages').snapshots().map(
+        (QuerySnapshot<Map<String, dynamic>>? snapshot) {
+          List<DocumentSnapshot<Map<String, dynamic>>> messageList = [];
+          if (snapshot != null) {
+            for (var message in snapshot.docs) {
+              if (message.exists && messageIdList.contains(message.id)) {
+                messageList.add(message);
+              }
+            }
+          } else {
+            return [];
+          }
+          return messageList;
+        },
+      );
+    } on FirebaseException catch (e) {
+      return null;
+    } catch (e) {
+      return null;
+    }
   }
 
+  // Stream of the last message ID in a chat room
   static Stream<String?>? getLastMessageId(String roomID) {
     StreamController<String?> controller = StreamController<String?>();
     final room = ChatRoomsRepository.getChatRoom(roomID);
@@ -50,34 +66,33 @@ class MessageRepository {
         }
       });
     } on FirebaseException catch (e) {
-      print(e.message.toString());
       controller.add(null);
     } catch (e) {
-      print(e.toString());
       controller.add(null);
     }
     return controller.stream;
   }
 
+  // Stream of a single message given its ID
   static Stream<DocumentSnapshot<Map<String, dynamic>>?>? getMessage(String messageId) {
     try {
-      print(messageId + 'message');
-      return _firestore.collection('messages').doc(messageId).snapshots().map((message) {
-        if (message.exists) {
-          print(message);
-          return message;
-        } else {
-          return null;
-        }
-      });
+      return _firestore.collection('messages').doc(messageId).snapshots().map(
+        (message) {
+          if (message.exists) {
+            return message;
+          } else {
+            return null;
+          }
+        },
+      );
     } on FirebaseException catch (e) {
-      print(e.message.toString());
+      return null;
     } catch (e) {
-      print(e);
+      return null;
     }
-    return null;
   }
 
+  // Send a message
   static Future<void> sendMessage(
     UserModel userModel,
     String msg,
@@ -99,13 +114,15 @@ class MessageRepository {
       messageIDList: [],
     );
     try {
+      // Add chat room ID to chat rooms if it doesn't exist
       await ChatRoomsRepository.addChatRoomIsNotExist(
         'chat_rooms',
         getConversationId(userModel.id!),
         chatRoom,
-      ).then((value) => print('Chat room id added to chat rooms successfully')).catchError(
-            (error) => print('Failed to add chat room id to chat rooms: $error'),
+      ).then((value) => log('Chat room id added to chat rooms successfully')).catchError(
+            (error) => log('Failed to add chat room id to chat rooms: $error'),
           );
+      // Add chat room to user's chat rooms list
       await ChatRoomsRepository.addChatRoomToUserChatRoomsList(
         userModel,
         getConversationId(userModel.id!),
@@ -116,29 +133,32 @@ class MessageRepository {
           getConversationId(userModel.id!),
         ),
       );
+      // Add message to Firestore
       final CollectionReference messagesRef = _firestore.collection('messages');
       await messagesRef.doc(message.id).set(message.toJson());
     } on FirebaseException catch (e) {
-      print(e.message.toString());
+      return;
     } catch (e) {
-      print(e.toString());
+      return;
     }
   }
 
+  // Send an image in a chat
   static Future<void> sendChatImage(UserModel userModel, File file) async {
     final String ext = file.path.split('.').last;
-    log('Extension $ext');
     final Reference reference = _firebaseStorage.ref().child('images/${getConversationId(userModel.id!)}/${DateTime.now().millisecondsSinceEpoch}.$ext');
     try {
+      // Upload image to Firebase Storage
       await reference.putFile(file, SettableMetadata(contentType: 'image/$ext')).then(
             (p0) => log('Data Transferred: ${p0.bytesTransferred / 1000} kb'),
           );
+      // Get image URL and send it as a message
       final String imageUrl = await reference.getDownloadURL();
       await sendMessage(userModel, imageUrl, Type.image);
     } on FirebaseException catch (e) {
-      print(e.message.toString());
+      return;
     } catch (e) {
-      print(e.toString());
+      return;
     }
   }
 }

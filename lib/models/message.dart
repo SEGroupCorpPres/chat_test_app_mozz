@@ -22,7 +22,7 @@ class Messages implements Comparable {
   });
 
   Messages.fromJson(dynamic json) {
-    id = json['id'].toString();
+    id = json['id'];
     senderId = json['sender_id'] as String;
     recipientId = json['recipient_id'] as String;
     isRead = json['is_read'] as bool;
