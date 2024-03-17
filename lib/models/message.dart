@@ -11,7 +11,7 @@ import 'comment.dart';
 
 class Messages implements Comparable {
   Messages({
-    // required this.id,
+    required this.id,
     required this.senderId,
     required this.recipientId,
     required this.isRead,
@@ -22,7 +22,7 @@ class Messages implements Comparable {
   });
 
   Messages.fromJson(dynamic json) {
-    // id = json['id'] as String;
+    id = json['id'] as String;
     senderId = json['sender_id'] as String;
     recipientId = json['recipient_id'] as String;
     isRead = json['is_read'] as bool;
@@ -45,7 +45,7 @@ class Messages implements Comparable {
     }
   }
 
-  // late final String? id;
+  late final String id;
   late final String senderId;
   late final String recipientId;
   late final bool isRead;
@@ -56,7 +56,7 @@ class Messages implements Comparable {
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
-    // map['id'] = id;
+    map['id'] = id;
     map['sender_id'] = senderId;
     map['recipient_id'] = recipientId;
     map['is_read'] = isRead;

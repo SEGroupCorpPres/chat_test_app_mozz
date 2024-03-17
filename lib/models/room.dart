@@ -1,7 +1,3 @@
-
-
-import 'package:chat_app_mozz_test/models/message.dart';
-
 /// id : "room1"
 /// name : "General Chat"
 /// created_at : "2024-02-09T10:00:00"
@@ -12,43 +8,23 @@ import 'package:chat_app_mozz_test/models/message.dart';
 class ChatRooms {
   ChatRooms({
     this.id,
-    this.name,
-    this.createdAt,
-    this.lastMessageTime,
-    this.users,
-    this.messages,});
+    this.messageIDList,
+  });
 
   ChatRooms.fromJson(dynamic json) {
     id = json['id'];
-    name = json['name'];
-    createdAt = json['created_at'];
-    lastMessageTime = json['last_message_time'];
-    users = json['users'] != null ? json['users'].cast<String>() : [];
-    if (json['messages'] != null) {
-      messages = [];
-      json['messages'].forEach((v) {
-        messages?.add(Messages.fromJson(v));
-      });
-    }
+    messageIDList = json['message_id_list'] != null ? List<String>.from(json['message_id_list']) : [];
   }
+
   String? id;
-  String? name;
-  String? createdAt;
-  String? lastMessageTime;
-  List<String>? users;
-  List<Messages>? messages;
+  List<String>? messageIDList;
 
   Map<String, dynamic> toJson() {
     final map = <String, dynamic>{};
     map['id'] = id;
-    map['name'] = name;
-    map['created_at'] = createdAt;
-    map['last_message_time'] = lastMessageTime;
-    map['users'] = users;
-    if (messages != null) {
-      map['messages'] = messages?.map((v) => v.toJson()).toList();
+    if (messageIDList != null) {
+      map['message_id_list'] = messageIDList?.map((v) => v).toList();
     }
     return map;
   }
-
 }

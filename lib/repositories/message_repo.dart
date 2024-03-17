@@ -1,9 +1,12 @@
+import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 
 import 'package:chat_app_mozz_test/models/message.dart';
+import 'package:chat_app_mozz_test/models/room.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
 import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
+import 'package:chat_app_mozz_test/repositories/room_repo.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -14,15 +17,67 @@ class MessageRepository {
 
   AuthRepository _authRepository = AuthRepository();
 
+  ChatRoomsRepository _roomsRepository = ChatRoomsRepository();
+
   static User get user => _firebaseAuth.currentUser!;
   static late UserModel currentUser;
-
+  static late ChatRooms rooms;
+  static late Messages messages;
+  static late String lastMessageID;
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   static String getConversationId(String id) => user.uid.hashCode <= id.hashCode ? '${user.uid}_$id' : '${id}_${user.uid}';
 
   static Stream<QuerySnapshot<Map<String, dynamic>>> getAllMessages(UserModel userModel) {
-    return _firestore.collection('rooms/${getConversationId(userModel.id!)}/messages').snapshots();
+    return _firestore.collection('messages').snapshots();
+  }
+
+  static Future<String?> getLastMessageId(String roomID) {
+    final Completer<String?> completer = Completer<String?>();
+    final room = ChatRoomsRepository.getChatRoom(roomID);
+
+    try {
+      room!.listen((snapshot) {
+        if (snapshot != null && snapshot.exists) {
+          var data = snapshot.data();
+          ChatRooms chatRooms = ChatRooms.fromJson(data);
+          if (chatRooms.messageIDList!.isNotEmpty) {
+            final List<String> messageIDList = chatRooms.messageIDList!.toList();
+            String lastMessageId = messageIDList.last;
+            completer.complete(lastMessageId);
+          } else {
+            completer.complete(null);
+          }
+        }
+      });
+    } on FirebaseException catch (e) {
+      print(e.message.toString());
+      completer.complete(null);
+    } catch (e) {
+      print(e.toString());
+      completer.complete(null);
+    }
+
+    return completer.future;
+  }
+
+  static Stream<DocumentSnapshot<Map<String, dynamic>>?>? getMessage(String messageId) {
+    try {
+      print(messageId + 'message');
+      return _firestore.collection('messages').doc(messageId).snapshots().map((message) {
+        if (message.exists) {
+          print(message);
+          return message;
+        } else {
+          return null;
+        }
+      });
+    } on FirebaseException catch (e) {
+      print(e.message.toString());
+    } catch (e) {
+      print(e);
+    }
+    return null;
   }
 
   static Future<void> sendMessage(
@@ -32,6 +87,7 @@ class MessageRepository {
   ) async {
     final time = Timestamp.now();
     final Messages message = Messages(
+      id: time.millisecondsSinceEpoch.toString(),
       senderId: user.uid,
       recipientId: userModel.id!,
       isRead: false,
@@ -40,9 +96,30 @@ class MessageRepository {
       type: type,
       comments: [],
     );
+    final ChatRooms chatRoom = ChatRooms(
+      id: getConversationId(userModel.id!),
+      messageIDList: [],
+    );
     try {
-      final CollectionReference reference = _firestore.collection('rooms/${getConversationId(userModel.id!)}/messages');
-      await reference.doc(time.millisecondsSinceEpoch.toString()).set(message.toJson());
+      await ChatRoomsRepository.addChatRoomIsNotExist(
+        'chat_rooms',
+        getConversationId(userModel.id!),
+        chatRoom,
+      ).then((value) => print('Chat room id added to chat rooms successfully')).catchError(
+            (error) => print('Failed to add chat room id to chat rooms: $error'),
+          );
+      await ChatRoomsRepository.addChatRoomToUserChatRoomsList(
+        userModel,
+        getConversationId(userModel.id!),
+      ).then(
+        (value) async => await ChatRoomsRepository.addMessageIdToChatRoomMessageIdList(
+          userModel,
+          message.id,
+          getConversationId(userModel.id!),
+        ),
+      );
+      final CollectionReference messagesRef = _firestore.collection('messages');
+      await messagesRef.doc(message.id).set(message.toJson());
     } on FirebaseException catch (e) {
       print(e.message.toString());
     } catch (e) {

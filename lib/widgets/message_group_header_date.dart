@@ -15,7 +15,7 @@ class GroupHeaderDate extends StatelessWidget {
         Container(
           width: MediaQuery.sizeOf(context).width,
           color: Colors.grey,
-          height: .1.h,
+          height: .5.h,
         ),
         Container(
           color: Colors.white,
@@ -23,7 +23,6 @@ class GroupHeaderDate extends StatelessWidget {
           child: Text(
             Features().getLastMessageTime(date),
             textAlign: TextAlign.center,
-            // style: Theme.of(context).textTheme.bodySmall?.copyWith(color: Colors.white),
           ),
         ),
       ]),

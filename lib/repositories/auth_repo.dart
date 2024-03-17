@@ -101,18 +101,5 @@ class AuthRepository {
     await _googleSignIn.signOut();
   }
 
-  void saveUserToFirestore(UserModel user) async {
-    // Obtain shared preferences.
-    final SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    try {
-      await FirebaseFirestore.instance.collection('users').doc(user.id).set(user.toMap()).onError(
-            (e, _) => print("Error writing document: $e"),
-          );
-      await prefs.setString('uid', user.id!);
-      print('User saved to Firestore successfully!');
-    } catch (e) {
-      print('Error saving user to Firestore: $e');
-    }
-  }
 }

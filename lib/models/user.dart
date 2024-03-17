@@ -34,12 +34,7 @@ class UserModel {
     status = json['status'];
     lastMessageTime = json['last_message_time'];
     pushToken = json['push_token'];
-    if (json['chat_rooms'] != null) {
-      chatRooms = [];
-      json['chat_rooms'].forEach((v) {
-        chatRooms?.add(ChatRooms.fromJson(v));
-      });
-    }
+    json['chat_rooms'] != null ? List<String>.from(json['chat_rooms']) : [];
   }
 
   factory UserModel.fromMap(Map<String, dynamic> map) {
