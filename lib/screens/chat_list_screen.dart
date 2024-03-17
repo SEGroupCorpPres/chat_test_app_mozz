@@ -1,11 +1,11 @@
 import 'dart:math';
 
 import 'package:chat_app_mozz_test/core/features.dart';
-import 'package:chat_app_mozz_test/models/message.dart';
 import 'package:chat_app_mozz_test/models/user.dart';
 import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
 import 'package:chat_app_mozz_test/repositories/message_repo.dart';
 import 'package:chat_app_mozz_test/repositories/user_repo.dart';
+import 'package:chat_app_mozz_test/screens/chat_list_tile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -43,25 +43,10 @@ class _ChatListScreenState extends State<ChatListScreen> {
     getUID();
   }
 
-
   Future<void> getUID() async {
     SharedPreferences sharedPreferences = await SharedPreferences.getInstance();
     uid = sharedPreferences.getString('uid')!;
     print('$uid  init uid');
-  }
-
-  Widget buildLastMessage(Messages message) {
-    if (message.type == Type.text) {
-      return Text(message.content);
-    } else if (message.type == Type.image) {
-      return Container(
-        width: 30,
-        decoration: BoxDecoration(
-          image: DecorationImage(image: NetworkImage(message.content), fit: BoxFit.cover),
-        ),
-      );
-    }
-    return Container();
   }
 
   @override
@@ -155,82 +140,21 @@ class _ChatListScreenState extends State<ChatListScreen> {
                           itemBuilder: (BuildContext context, int index) {
                             random = Random().nextInt(16);
                             final String roomId = MessageRepository.getConversationId(userList[index].id!);
-                            String? _lastMessageID;
-
-                           
-                            print('$_lastMessageID  ------> message id');
-                            return ListTile(
-                              dense: true,
-                              enabled: true,
-                              onTap: () => Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => ChatRoomScreen(
-                                    context: context,
-                                    uid: userList[index].id!,
-                                    colorIndex: random!,
-                                  ),
-                                ),
-                              ),
-                              leading: userList[index].image != null
-                                  ? CircleAvatar(
-                                      radius: 30.r,
-                                      backgroundImage: NetworkImage(userList[index].image!),
-                                    )
-                                  : CircleAvatar(
-                                      radius: 30.r,
-                                      backgroundColor: constants.leadingColor(random!),
-                                      child: Text(
-                                        features.leading(userList[index].username.toString()),
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          fontSize: 18.sp,
-                                        ),
-                                      ),
-                                    ),
-                              title: Text(
-                                userList[index].username.toString(),
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              subtitle:FutureBuilder(
-                                future: MessageRepository.getLastMessageId(roomId),
-                                builder: (context, futureSnapshot) {
-                                  switch(futureSnapshot.connectionState) {
-                                    case ConnectionState.done:
-                                      return StreamBuilder(
-                                        stream: MessageRepository.getMessage(futureSnapshot.data!),
-                                        builder: (context, snapshot) {
-                                          print(snapshot);
-                                          switch (snapshot.connectionState) {
-                                            case ConnectionState.active:
-                                            case ConnectionState.done:
-                                              print(snapshot.connectionState);
-                                              Messages lastMessage = Messages.fromJson(snapshot.data);
-                                              return buildLastMessage(lastMessage);
-                                            default:
-                                              print(snapshot.connectionState);
-                                              return Container();
-                                          }
-                                        },
-                                      );
-                                    default:
-                                      return Container();
-                                  }
-                                    
-
+                            print('$roomId  ------> room id');
+                            return StreamBuilder(
+                              stream: MessageRepository.getLastMessageId(roomId),
+                              builder: (context, messageIDSnapshot) {
+                                print(messageIDSnapshot.connectionState);
+                                print(messageIDSnapshot.data.toString() + '  messageSnapshot');
+                                switch (messageIDSnapshot.connectionState) {
+                                  case ConnectionState.active:
+                                  case ConnectionState.done:
+                                    return ChatListTile(user: userList[index], colorIndex: random!, lastMessageId: messageIDSnapshot.data);
+                                  case ConnectionState.none:
+                                  default:
+                                    return ChatListTile(user: userList[index], colorIndex: random!, lastMessageId: messageIDSnapshot.data);
                                 }
-                              ),
-                              trailing: Column(
-                                children: [
-                                  Text(
-                                    userList[index].lastMessageTime != null ? features.getLastMessageTime(userList[index].lastMessageTime!.toDate()) : '',
-                                    style: const TextStyle(color: Colors.black54, fontSize: 12),
-                                  ),
-                                ],
-                              ),
+                              },
                             );
                           },
                           separatorBuilder: (BuildContext context, int index) => Divider(

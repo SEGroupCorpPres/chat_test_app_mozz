@@ -32,10 +32,9 @@ class MessageRepository {
     return _firestore.collection('messages').snapshots();
   }
 
-  static Future<String?> getLastMessageId(String roomID) {
-    final Completer<String?> completer = Completer<String?>();
+  static Stream<String?>? getLastMessageId(String roomID) {
+    StreamController<String?> controller = StreamController<String?>();
     final room = ChatRoomsRepository.getChatRoom(roomID);
-
     try {
       room!.listen((snapshot) {
         if (snapshot != null && snapshot.exists) {
@@ -44,21 +43,20 @@ class MessageRepository {
           if (chatRooms.messageIDList!.isNotEmpty) {
             final List<String> messageIDList = chatRooms.messageIDList!.toList();
             String lastMessageId = messageIDList.last;
-            completer.complete(lastMessageId);
+            controller.add(lastMessageId);
           } else {
-            completer.complete(null);
+            controller.add(null);
           }
         }
       });
     } on FirebaseException catch (e) {
       print(e.message.toString());
-      completer.complete(null);
+      controller.add(null);
     } catch (e) {
       print(e.toString());
-      completer.complete(null);
+      controller.add(null);
     }
-
-    return completer.future;
+    return controller.stream;
   }
 
   static Stream<DocumentSnapshot<Map<String, dynamic>>?>? getMessage(String messageId) {
