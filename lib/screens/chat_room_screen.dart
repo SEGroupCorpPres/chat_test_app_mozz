@@ -77,7 +77,6 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
         UserModel user = UserModel();
         if (snapshot.hasData) {
           user = UserModel.fromJson(snapshot.data);
-
           return Scaffold(
             backgroundColor: Colors.white,
             appBar: AppBar(
@@ -125,7 +124,7 @@ class _ChatRoomScreenState extends State<ChatRoomScreen> {
                       ),
                       Text(
                         user.status! ? 'online' : 'offline',
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: Colors.green),
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.w400, color: user.status! ? Colors.green : Colors.grey),
                       ),
                     ],
                   ),

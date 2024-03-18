@@ -1,6 +1,7 @@
 import 'package:chat_app_mozz_test/core/constants.dart';
 import 'package:chat_app_mozz_test/core/features.dart';
 import 'package:chat_app_mozz_test/models/message.dart';
+import 'package:chat_app_mozz_test/repositories/auth_repo.dart';
 import 'package:chat_app_mozz_test/repositories/message_repo.dart';
 import 'package:chat_app_mozz_test/widgets/message.dart';
 import 'package:chat_app_mozz_test/widgets/message_group_header_date.dart';
@@ -10,6 +11,7 @@ import 'package:grouped_list/grouped_list.dart';
 
 class MessageListItem extends StatefulWidget {
   const MessageListItem({super.key, required this.messageIdList, required this.uid});
+
   final List<String>? messageIdList;
   final String uid;
 
@@ -22,6 +24,7 @@ class _MessageListItemState extends State<MessageListItem> {
   Features features = Features();
   Constants constants = Constants();
   final List<Messages> _listMessages = [];
+
   @override
   void initState() {
     // TODO: implement initState
@@ -47,9 +50,14 @@ class _MessageListItemState extends State<MessageListItem> {
           case ConnectionState.active:
           case ConnectionState.done:
             final data = snapshot.data;
-             for (var element in data!) {
+            for (var element in data!) {
               Messages message = Messages.fromJson(element);
               _listMessages.add(message);
+            }
+            for (Messages message in _listMessages) {
+              if (!message.isRead && message.senderId != AuthRepository.user.uid) {
+                MessageRepository.updateMessageStatus(true, message.id);
+              }
             }
             return Scrollbar(
               controller: _scrollController,

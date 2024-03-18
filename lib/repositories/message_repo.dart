@@ -143,6 +143,14 @@ class MessageRepository {
     }
   }
 
+  static Future<void> updateMessageStatus(bool isRead, String id) async {
+    await _firestore.collection('messages').doc(id).update(
+      {
+        'is_read': isRead,
+      },
+    );
+  }
+
   // Send an image in a chat
   static Future<void> sendChatImage(UserModel userModel, File file) async {
     final String ext = file.path.split('.').last;

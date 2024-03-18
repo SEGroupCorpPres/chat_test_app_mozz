@@ -7,6 +7,7 @@ import 'package:chat_app_mozz_test/repositories/user_repo.dart';
 import 'package:chat_app_mozz_test/screens/chat_list_tile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatListScreen extends StatefulWidget {
@@ -32,6 +33,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
     // TODO: implement initState
     super.initState();
     getUID();
+    SystemChannels.lifecycle.setMessageHandler((message) {
+      print('Message: $message');
+      if (message.toString().contains('resume')) UsersRepository.updateUserStatus(true, uid);
+
+      if (message.toString().contains('pause')) UsersRepository.updateUserStatus(false, uid);
+      print(uid + '---> uid');
+      return Future.value(message);
+    });
   }
 
   Future<void> getUID() async {

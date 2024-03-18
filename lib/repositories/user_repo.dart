@@ -40,4 +40,13 @@ class UsersRepository {
   static Stream<DocumentSnapshot<Map<String, dynamic>>> getSingleUserWithId(String id) {
     return _firebaseFirestore.collection('users').doc(id).snapshots();
   }
+
+  static Future<void> updateUserStatus(bool isOnline, String id) async {
+    await _firebaseFirestore.collection('users').doc(id).update(
+      {
+        'status': isOnline,
+        'last_activity': Timestamp.now(),
+      },
+    );
+  }
 }

@@ -194,11 +194,6 @@ class _MessageState extends State<Message> {
                             Row(
                               children: [
                                 Text(features.messageTimeFormat(widget.messages.timestamp.toDate())),
-                                SizedBox(width: 3.w),
-                                Icon(
-                                  widget.messages.isRead ? Icons.done_all : Icons.check,
-                                  size: 15.sp,
-                                ),
                               ],
                             ),
                           ],
